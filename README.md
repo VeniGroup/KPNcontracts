@@ -23,7 +23,7 @@ Smart contract flow
         sends to a list of bulk users
         also has whitelist functions to create a whitelist stored to send to
 
-    Locking contract (aka mining contract)
+    Locking contract (aka staking contract)
         update different apr's
         users can stake tokens for 6 months, 12 months, 24 months
         rewards paid in USDT (please ensure USDT is stored on the smart contract)
