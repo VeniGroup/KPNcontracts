@@ -2,10 +2,10 @@
 const hre = require("hardhat");
 
 const USDTAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
-const multiSigWallet = "0x"
+const multiSigWallet = "0x0EdF47301934dc46876d3e31c52b4B549EE01404" //Change Later to Manny's wallet
 
 async function main() {
-  const KPNToken = await hre.ethers.deployContract("KPNToken"[multiSigWallet])
+  const KPNToken = await hre.ethers.deployContract("KPNToken", [multiSigWallet])
   await KPNToken.waitForDeployment()
 
   const LockingContract = await hre.ethers.deployContract("LockTokens", [KPNToken.target, USDTAddress, multiSigWallet])

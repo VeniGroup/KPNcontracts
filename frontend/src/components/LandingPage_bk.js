@@ -26,10 +26,6 @@ const LandingPage = () => {
     const [currentStake, setCurrentStake] = useState(0)
     const [stakeDuration, setStakeDuration] = useState(0)
     const [stakeAmount, setStakeAmount] = useState(0)
-    const [whitelistAddresses, setWhitelistAddresses] = useState([]);
-    const [whitelistAmounts, setWhitelistAmounts] = useState([]);
-    const [maxBulkSendCount, setMaxBulkSendCount] = useState(0);
-
 
     const checkIfWalletIsConnected = async () =>{
         try{
@@ -146,30 +142,6 @@ const LandingPage = () => {
         }
     };
 
-    //Self Claim Tokens
-    const claimTokens = async () => {
-        try {
-            if (window.ethereum) {
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                const signer = await provider.getSigner();
-                const claimTokensContract = fetchClaimTokens(signer);
-    
-                console.log("ClaimTokens Contract Address:", claimTokensContract.target);
-    
-                const claimTx = await claimTokensContract.claimTokens();
-                const claimRes = await claimTx.wait();
-    
-                if (claimRes.status === 1) {
-                    console.log("Tokens claimed successfully.");
-                } else {
-                    console.log("Failed to claim tokens.");
-                }
-            }
-        } catch (err) {
-            console.log("Error claiming tokens:", err);
-        }
-    };
-
     // before mining to one user, make sure the contract has enough tokens
     // if contract needs more tokens, call mintToMiningContract 
     // mining contract and claim contract are the same contract, different name
@@ -219,81 +191,34 @@ const LandingPage = () => {
                 ]
 
             */
-        // then store in array to pass into bulkAddToWhiteList
+        // then store in array to pass into sendToBulkAddresses
     }
 
 
-    const bulkSend = async (maxCount) => {
+    const sendToBulkAddresses = async (addressStructs) =>{
         try {
-            if (window.ethereum) {
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                const signer = await provider.getSigner();
-                const claimTokensContract = fetchClaimTokens(signer);
+            if(window.ethereum){
+                const provider = new ethers.BrowserProvider(window.ethereum)
 
-                console.log("ClaimTokens Contract Address:", claimTokensContract.target);
+                const signer = await provider.getSigner()
+                const Claimtokens = fetchClaimTokens(signer)
 
-                const bulkSendTx = await claimTokensContract.bulkSend(maxCount);
-                const bulkSendRes = await bulkSendTx.wait();
+                
 
-                if (bulkSendRes.status === 1) {
-                    console.log("Bulk send successful.");
-                } else {
-                    console.log("Failed to execute bulk send.");
+                let tx = await Claimtokens.bulkSend(addressStructs)
+                let res = await tx.wait()
+                if(res.status === 1 ){
+                    console.log("success")
+                }else {
+                    console.log("failed")
                 }
-            }
-        } catch (err) {
-            console.log("Error in bulk send:", err);
-        }
-    };
 
-    //Whitelist section
-    const addToWhitelist = async (newTarget, claimAmount) => {
-        try {
-            if (window.ethereum) {
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                const signer = await provider.getSigner();
-                const claimTokensContract = fetchClaimTokens(signer);
-    
-                const formattedClaimAmount = parseUnits(claimAmount.toString(), 18);
-    
-                const addToWhitelistTx = await claimTokensContract.addToWhitelist(newTarget, formattedClaimAmount);
-                const addToWhitelistRes = await addToWhitelistTx.wait();
-    
-                if (addToWhitelistRes.status === 1) {
-                    console.log("Address added to whitelist successfully.");
-                } else {
-                    console.log("Failed to add address to whitelist.");
-                }
             }
-        } catch (err) {
-            console.log("Error adding to whitelist:", err);
-        }
-    };
-    
-    const bulkAddToWhitelist = async (targets, amounts) => {
-        try {
-            if (window.ethereum) {
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                const signer = await provider.getSigner();
-                const claimTokensContract = fetchClaimTokens(signer);
-    
-                const formattedAmounts = amounts.map(amount => parseUnits(amount.toString(), 18));
-    
-                const bulkAddTx = await claimTokensContract.bulkAddToWhitelist(targets, formattedAmounts);
-                const bulkAddRes = await bulkAddTx.wait();
-    
-                if (bulkAddRes.status === 1) {
-                    console.log("Bulk add to whitelist successful.");
-                } else {
-                    console.log("Failed to execute bulk add to whitelist.");
-                }
-            }
-        } catch (err) {
-            console.log("Error in bulk adding to whitelist:", err);
-        }
-    };
-    
 
+        }catch(err){
+            console.log(err)
+        }
+    }
 
     // STAKING FUNCTIONS
     // fetch current users stake
@@ -360,29 +285,31 @@ const LandingPage = () => {
     };
            
 
-    const withdrawStake = async () => {
+    const withdrawStake = async () =>{
         try {
-            if (window.ethereum) {
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                const signer = await provider.getSigner();
-                const lockingContract = fetchLockTokens(signer);
-    
-                console.log("Locking Contract Address:", lockingContract.target);
-    
-                const withdrawTx = await lockingContract.withdrawLocked();
-                const withdrawRes = await withdrawTx.wait();
-    
-                if (withdrawRes.status === 1) {
-                    console.log("Stake withdrawn successfully.");
-                } else {
-                    console.log("Failed to withdraw stake.");
+            if(window.ethereum){
+                const provider = new ethers.BrowserProvider(window.ethereum)
+
+                const signer = await provider.getSigner()
+                const lockingcontract = fetchLockTokens(signer)
+
+                const tx = await lockingcontract.withdrawLocked()
+                const res = await tx.wait()
+
+                if(res.status===1){
+                    console.log("success")
+                }else {
+                    console.log("failed")
                 }
+
+
+
             }
-        } catch (err) {
-            console.log("Error withdrawing stake:", err);
+
+        }catch(err){
+            console.log(err)
         }
-    };
-    
+    }
     const setTier1Apr = async (newRate) =>{
         try {
             if(window.ethereum){
@@ -468,7 +395,7 @@ const LandingPage = () => {
 
   return (
     <div>
-        <h1>KPN Dashboard</h1>
+        <h1>Hello World</h1>
         {/* connect to metamask wallet */}
         {currentAccount ? <p>{currentAccount}</p> :  <button onClick={connectToWallet}>Connect To Wallet</button>}
 
@@ -480,36 +407,16 @@ const LandingPage = () => {
         <input type="number"  onChange={e=>setMintAmount(e.target.value)} />
         <button onClick={e=>mintToMiningContract(mintAmount)} >Mint To Mining Contract</button>
         <br></br>
-        <section>
-            <h2>Claim Tokens and Rewards for Users</h2>
-            <input type="number" placeholder="Max Bulk Send Count" onChange={e => setMaxBulkSendCount(e.target.value)} />
-            <button onClick={() => bulkSend(maxBulkSendCount)}>Bulk Send</button>
-        </section>
-
-        <section>
-            <h2>Whitelist Management</h2>
-            <div>
-                <h3>Add Single Address to Whitelist</h3>
-                <input type="text" placeholder="Target Address" onChange={e => setTargetAddress(e.target.value)} />
-                <input type="number" placeholder="Amount" onChange={e => setMintAmount(e.target.value)} />
-                <button onClick={() => addToWhitelist(targetAddress, mintAmount)}>Add to Whitelist</button>
-            </div>
-
-            <div>
-                <h3>Bulk Add To Whitelist</h3>
-                <input type="file" accept=".csv" onChange={handleFileInput} />
-                <button onClick={() => bulkAddToWhitelist(whitelistAddresses, whitelistAmounts)}>Import and Add to Whitelist</button>
-            </div>
-        </section>
-
-        <section>
-            <h2>Claim Tokens</h2>
-            <button onClick={claimTokens}>Claim Tokens</button>
-        </section>
-        
+        <input type="number"  onChange={e=>setMintAmount(e.target.value)} />
+        <input type="text" onChange={e=>setTargetAddress(e.target.value)} />
+        <button onClick={e=>sendToOneUserFromMining(targetAddress, mintAmount)} >User Self Token Claim</button>
+        <br></br>
+        <input type="file" accept=".csv" onChange={handleFileInput} />
+        <input type="text" onChange={e=>setTargetAddress(e.target.value)} />
+        <button onClick={e=>sendToBulkAddresses(maxCount)} >Mint To target addresses Max Count</button>
         <br></br>
 
-        <section>
+        <div>
             <h2>Staking</h2>
             <label>
                 <input type="radio" name="duration" value="15552000" onChange={e => setStakeDuration(e.target.value)} /> 6 Months
@@ -523,16 +430,14 @@ const LandingPage = () => {
                 <input type="radio" name="duration" value="63072000" onChange={e => setStakeDuration(e.target.value)} /> 24 Months
             </label>
             <br />
-            <br></br>
             <label>
                 Stake amount:
                 <input name="stake-amount" type="text" onChange={e => setStakeAmount(e.target.value)} />
             </label>
             <button onClick={() => stakeTokens(stakeAmount.toString(), stakeDuration.toString())}>Stake Tokens</button>
             <br />
-            <br></br>
             <button onClick={withdrawStake}>Withdraw Stake</button>
-        </section>
+        </div>
 
     </div>
   )

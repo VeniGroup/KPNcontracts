@@ -18,6 +18,7 @@ contract ClaimTokens is AccessControl {
     bytes32 public constant WHITELIST_MANAGER_ROLE = keccak256("WHITELIST_MANAGER_ROLE");
 
     mapping(address => uint256) public claimableTokens;
+    mapping(address => bool) public isWhitelisted;
     address[] public whitelistedAddresses;
     address[] private adminAddresses; // Track addresses with ADMIN_ROLE
     address[] private whitelistManagerAddresses; // Track addresses with WHITELIST_MANAGER_ROLE
@@ -51,8 +52,10 @@ contract ClaimTokens is AccessControl {
 
     function addToWhitelist(address newTarget, uint256 claimAmount) public onlyRole(WHITELIST_MANAGER_ROLE) {
         require(newTarget != address(0), "Cannot add zero address");
+        require(!isWhitelisted[newTarget], "Already whitelisted");
         if (claimableTokens[newTarget] == 0) {
             whitelistedAddresses.push(newTarget);
+            isWhitelisted[newTarget] = true;
         }
         claimableTokens[newTarget] = claimAmount;
     }
