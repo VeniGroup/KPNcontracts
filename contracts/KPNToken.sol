@@ -13,7 +13,7 @@ interface IMultiSigWallet {
 
 contract KPNToken is ERC20, AccessControl{
     using SafeERC20 for ERC20;
-    IMultiSigWallet public multiSigWallet;
+    IMultiSigWallet public immutable multiSigWallet;
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 

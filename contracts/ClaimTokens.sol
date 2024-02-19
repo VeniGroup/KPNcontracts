@@ -12,7 +12,7 @@ interface IMultiSigWallet {
 contract ClaimTokens is AccessControl {
     using SafeERC20 for IERC20;
     IERC20 private KPNToken;
-    IMultiSigWallet public multiSigWallet;
+    IMultiSigWallet public immutable multiSigWallet;
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant WHITELIST_MANAGER_ROLE = keccak256("WHITELIST_MANAGER_ROLE");
