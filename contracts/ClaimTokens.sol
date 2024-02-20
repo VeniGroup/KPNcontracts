@@ -60,6 +60,14 @@ contract ClaimTokens is AccessControl {
         claimableTokens[newTarget] = claimAmount;
     }
 
+    function claimTokens(address target, uint256 amount) public onlyRole(ADMIN_ROLE){
+        require(target  != address(0), "Zero address not allowed");
+        require(amount > 0, "Must send a positive value");
+        require(KPNToken.balanceOf(address(this)) >= amount, "Not enough tokens in contract to make this claim");
+        KPNToken.safeTransfer(target, amount);
+        emit TokenClaimed(target, amount);
+    }
+
     function claimTokens() public {
         uint256 amount = claimableTokens[msg.sender];
         require(amount > 0, "No tokens to claim");
