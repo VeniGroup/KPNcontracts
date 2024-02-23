@@ -19,6 +19,7 @@ contract LockTokens is AccessControl{
     // KPN Token Contract
     KPNToken private KPN;
     uint256 public totalLockedTokens; // total value locked
+    uint256 public usdtVault;         // USDT vault (USDT)
     address private USDT; // USDT token address - can be replaced with whatever ERC20 token you would like to use
     
     // tier cut off amounts
@@ -129,6 +130,10 @@ contract LockTokens is AccessControl{
 
             lockedBalances[msg.sender] = newLock;
             totalLockedTokens+= lockAmount;
+
+            require(IERC20(USDT).balanceOf(address(this)) - usdtVault >= rewardAmount,"Not enough USDT in contract to cover rewards");
+            usdtVault += rewardAmount;
+
             IERC20(KPN).safeTransferFrom(msg.sender, address(this), lockAmount);
 
         }else if (amount >= tier2Cutoff && amount <tier3Cutoff){
@@ -137,7 +142,9 @@ contract LockTokens is AccessControl{
 
             uint rewardAmount = _calcRewardAmount(timeFrame, lockAmount);
             LockAmount memory newLock = LockAmount(timeFrame, lockAmount, block.timestamp, rewardAmount); // set the tokens into locked status
-           
+
+            require(IERC20(USDT).balanceOf(address(this)) - usdtVault >= rewardAmount,"Not enough USDT in contract to cover rewards");
+            usdtVault += rewardAmount;
 
             lockedBalances[msg.sender] = newLock;
             totalLockedTokens+= lockAmount;
@@ -149,6 +156,9 @@ contract LockTokens is AccessControl{
             uint rewardAmount = _calcRewardAmount(timeFrame, lockAmount);
             LockAmount memory newLock = LockAmount(timeFrame, lockAmount, block.timestamp, rewardAmount); // set the tokens into locked status
             
+            require(IERC20(USDT).balanceOf(address(this)) - usdtVault >= rewardAmount,"Not enough USDT in contract to cover rewards");
+            usdtVault += rewardAmount;
+            
             lockedBalances[msg.sender] = newLock;
             totalLockedTokens+= lockAmount;
             IERC20(KPN).safeTransferFrom(msg.sender, address(this), lockAmount);
@@ -159,6 +169,8 @@ contract LockTokens is AccessControl{
             uint rewardAmount = _calcRewardAmount(timeFrame, lockAmount);
             LockAmount memory newLock = LockAmount(timeFrame, lockAmount, block.timestamp, rewardAmount); // set the tokens into locked status
             
+            require(IERC20(USDT).balanceOf(address(this)) - usdtVault >= rewardAmount,"Not enough USDT in contract to cover rewards");
+            usdtVault += rewardAmount;
 
             lockedBalances[msg.sender] = newLock;
             totalLockedTokens+= lockAmount;
@@ -171,6 +183,9 @@ contract LockTokens is AccessControl{
             uint rewardAmount = _calcRewardAmount(timeFrame, lockAmount);
             LockAmount memory newLock = LockAmount(timeFrame, lockAmount, block.timestamp, rewardAmount); // set the tokens into locked status
             
+            require(IERC20(USDT).balanceOf(address(this)) - usdtVault >= rewardAmount,"Not enough USDT in contract to cover rewards");
+            usdtVault += rewardAmount;
+
             lockedBalances[msg.sender] = newLock;
             totalLockedTokens+= lockAmount;
             IERC20(KPN).safeTransferFrom(msg.sender, address(this), lockAmount);
@@ -182,6 +197,9 @@ contract LockTokens is AccessControl{
             uint rewardAmount = _calcRewardAmount(timeFrame, lockAmount);
             LockAmount memory newLock = LockAmount(timeFrame, amount, block.timestamp, rewardAmount); // set the tokens into locked status
             
+            require(IERC20(USDT).balanceOf(address(this)) - usdtVault >= rewardAmount,"Not enough USDT in contract to cover rewards");
+            usdtVault += rewardAmount;
+
             lockedBalances[msg.sender] = newLock;
             totalLockedTokens+= amount;
             IERC20(KPN).safeTransferFrom(msg.sender, address(this), amount);
@@ -211,8 +229,9 @@ contract LockTokens is AccessControl{
         require(block.timestamp > lockedBalances[msg.sender].lockTime + lockedBalances[msg.sender].timestamp, "ERC20: Time Lock not complete");
         require(lockedBalances[msg.sender].amount > 0, "ERC20: No Funds Locked");
         uint256 tokenAmount = lockedBalances[msg.sender].amount;
+        uint256 rewardAmount = lockedBalances[msg.sender].rewardAmount;
 
-        LockAmount memory lockStruct = lockedBalances[msg.sender];
+        // LockAmount memory lockStruct = lockedBalances[msg.sender];
         totalLockedTokens -= tokenAmount;
         delete lockedBalances[msg.sender];
 
@@ -220,7 +239,7 @@ contract LockTokens is AccessControl{
         IERC20(KPN).safeTransfer(msg.sender, tokenAmount);
 
         // Attempt to pay USDT rewards separately
-        _tryPayUSDT(msg.sender, lockStruct.rewardAmount);
+        _tryPayUSDT(msg.sender, rewardAmount);
 
         emit TokensWithdrawn(msg.sender, block.timestamp);
     }
@@ -229,6 +248,7 @@ contract LockTokens is AccessControl{
         uint256 usdtBalance = IERC20(USDT).balanceOf(address(this));
         if (usdtBalance >= rewardAmount) {
             IERC20(USDT).safeTransfer(to, rewardAmount);
+            usdtVault -= rewardAmount;
         } else {
             emit InsufficientUSDTForRewards(to, rewardAmount);
         }
@@ -369,6 +389,11 @@ contract LockTokens is AccessControl{
                 break;
             }
         }
+    }
+
+    function withdrawUSDTAdmin(uint256 amount) external onlyRole(ADMIN_ROLE){
+        require(IERC20(USDT).balanceOf(address(this)) - usdtVault >= amount , "Not enough USDT");
+        IERC20(USDT).safeTransfer(msg.sender,amount);
     }
 
 }
