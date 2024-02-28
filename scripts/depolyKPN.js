@@ -4,21 +4,12 @@ const util = require("util");
 const execAsync = util.promisify(exec);
 
 async function main() {
-    const USDTAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
     const multiSigWallet = "0xB39aE99fb34d2Fd691BBeEDF595E3Ce7b002dF5e";
-    const KPNaddress = ""; // Replace with KPN address after doing deployKPN
 
     // Deploy KPNToken
-    // const KPNToken = await deployContract("KPNToken", [multiSigWallet]);
-    // await flattenAndVerify(KPNToken, ["KPNToken", multiSigWallet]);
+    const KPNToken = await deployContract("KPNToken", [multiSigWallet]);
+    await flattenAndVerify(KPNToken, ["KPNToken", multiSigWallet]);
 
-    // Deploy LockTokens
-    const LockTokens = await deployContract("LockTokens", [KPNaddress, USDTAddress, multiSigWallet]);
-    await flattenAndVerify(LockTokens, ["LockTokens", KPNaddress, USDTAddress, multiSigWallet]);
-
-    // Deploy ClaimTokens
-    const ClaimTokens = await deployContract("ClaimTokens", [KPNaddress, multiSigWallet]);
-    await flattenAndVerify(ClaimTokens, ["ClaimTokens", KPNaddress, multiSigWallet]);
 
     console.log("Deployment, flattening, and verification process completed.");
 }

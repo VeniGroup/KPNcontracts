@@ -1,8 +1,8 @@
 
 const hre = require("hardhat");
 
-const USDTAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
-const multiSigWallet = "0x91Aa6C17340b1837aD8DcD5835249392BCB4fC5d"
+const USDTAddress = "0xA230Abc6076A497B254F92Bf5cE68ED6a35EC008"
+const multiSigWallet = "0xB39aE99fb34d2Fd691BBeEDF595E3Ce7b002dF5e"
 
 async function main() {
   const KPNToken = await hre.ethers.deployContract("KPNToken", [multiSigWallet])

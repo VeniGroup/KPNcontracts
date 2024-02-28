@@ -76,6 +76,28 @@ contract ClaimTokens is AccessControl {
         emit TokenClaimed(msg.sender, amount);
     }
 
+    function claimTokensBulk(address[] memory targets, uint256[] memory amounts) public onlyRole(ADMIN_ROLE) {
+        require(targets.length == amounts.length, "Targets and amounts length mismatch");
+
+        uint256 totalAmount = 0;
+        for (uint256 i = 0; i < amounts.length; i++) {
+            totalAmount += amounts[i];
+        }
+
+        require(KPNToken.balanceOf(address(this)) >= totalAmount, "Not enough tokens in contract to cover all claims");
+
+        for (uint256 i = 0; i < targets.length; i++) {
+            address target = targets[i];
+            uint256 amount = amounts[i];
+
+            require(target != address(0), "Zero address not allowed");
+            require(amount > 0, "Must send a positive value");
+
+            KPNToken.safeTransfer(target, amount);
+            emit TokenClaimed(target, amount);
+        }
+    }
+
     function bulkSend(uint256 maxCount) public onlyRole(ADMIN_ROLE) {
         uint256 count = 0;
         uint256 totalProcessed = 0;

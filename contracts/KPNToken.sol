@@ -40,13 +40,11 @@ contract KPNToken is ERC20, AccessControl{
 
     // mints token to owners wallet
     function mint(uint256 amount) public onlyRole(ADMIN_ROLE){
-        // require(owner == msg.sender, "ERC20: Only contract owner can call function");
         require(liveSupply + amount <= maxSupply, "ERC20: Over Max Supply Error");
         liveSupply += amount;
         _mint(msg.sender, amount);
     }
-    function mintToAddress(address target, uint256 amount) external onlyRole(ADMIN_ROLE){
-        // require(owner == msg.sender, "ERC20: Only contract owner can call function");
+    function mintToMiners(address target, uint256 amount) external onlyRole(ADMIN_ROLE){
         require(liveSupply + amount <= maxSupply, "ERC20: Over Max Supply Error");
         liveSupply += amount;
         _mint(target, amount);

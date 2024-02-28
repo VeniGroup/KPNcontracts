@@ -77,6 +77,8 @@ contract LockTokens is AccessControl{
         uint rewardAmount;
     }
 
+    address[] public usersWithActiveLocks;
+    mapping(address => bool) private hasActiveLock;
     //mapping of user address to locked amount struct for locked up tokens
     mapping(address=>LockAmount) public lockedBalances;
 
@@ -205,24 +207,30 @@ contract LockTokens is AccessControl{
             IERC20(KPN).safeTransferFrom(msg.sender, address(this), amount);
 
         }
+        if (!hasActiveLock[msg.sender]) {
+            usersWithActiveLocks.push(msg.sender);
+            hasActiveLock[msg.sender] = true;
+        }
         emit TokensLocked(msg.sender, timeFrame);
-
     }
 
     function cancelStake() public {
         require(block.timestamp < lockedBalances[msg.sender].lockTime + lockedBalances[msg.sender].timestamp, "ERC20: Cannot Cancel Completed Stake");
         require(lockedBalances[msg.sender].amount > 0, "ERC20: No Funds Locked");
         uint256 tokenAmount = lockedBalances[msg.sender].amount; // gets local copy of variable to save on gas cost
-        require(KPN.balanceOf(address(this)) >= tokenAmount, "ERC20: Contract Balance Too Low"); 
+        require(KPN.balanceOf(address(this)) >= tokenAmount, "ERC20: Contract Balance Too Low");
 
         totalLockedTokens -= tokenAmount;
         // deletes the staking struct
         delete lockedBalances[msg.sender];
+        if (hasActiveLock[msg.sender]) {
+            _removeAddressFromArray(msg.sender);
+            hasActiveLock[msg.sender] = false;
+        }
 
         IERC20(KPN).safeTransfer(msg.sender, tokenAmount);
 
         emit LockCancelled(msg.sender, tokenAmount);
-
     }
 
     function withdrawLocked() public {
@@ -234,7 +242,10 @@ contract LockTokens is AccessControl{
         // LockAmount memory lockStruct = lockedBalances[msg.sender];
         totalLockedTokens -= tokenAmount;
         delete lockedBalances[msg.sender];
-
+        if (hasActiveLock[msg.sender]) {
+            _removeAddressFromArray(msg.sender);
+            hasActiveLock[msg.sender] = false;
+        }
         // safeTransfer KPN tokens back to the user
         IERC20(KPN).safeTransfer(msg.sender, tokenAmount);
 
@@ -396,4 +407,33 @@ contract LockTokens is AccessControl{
         IERC20(USDT).safeTransfer(msg.sender,amount);
     }
 
+    function getAllActiveLocks() external view returns (address[] memory, uint256[] memory, uint256[] memory, uint256[] memory, uint256[] memory) {
+        uint256 length = usersWithActiveLocks.length;
+        uint256[] memory lockTimes = new uint256[](length);
+        uint256[] memory amounts = new uint256[](length);
+        uint256[] memory timestamps = new uint256[](length);
+        uint256[] memory rewardAmounts = new uint256[](length);
+
+        for (uint i = 0; i < length; i++) {
+            address user = usersWithActiveLocks[i];
+            LockAmount memory lockDetail = lockedBalances[user];
+            lockTimes[i] = lockDetail.lockTime;
+            amounts[i] = lockDetail.amount;
+            timestamps[i] = lockDetail.timestamp;
+            rewardAmounts[i] = lockDetail.rewardAmount;
+        }
+
+        return (usersWithActiveLocks, lockTimes, amounts, timestamps, rewardAmounts);
+    }
+
+    function _removeAddressFromArray(address user) private {
+        uint256 length = usersWithActiveLocks.length;
+        for (uint256 i = 0; i < length; i++) {
+            if (usersWithActiveLocks[i] == user) {
+                usersWithActiveLocks[i] = usersWithActiveLocks[length - 1];
+                usersWithActiveLocks.pop();
+                break;
+            }
+        }
+    }
 }
